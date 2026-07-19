@@ -1,0 +1,26 @@
+from pydantic import BaseModel, EmailStr
+from typing import Optional
+from datetime import datetime
+
+
+#Customer activity schema
+class ActivityCreate(BaseModel):
+    customer_id: int
+    activity_type: str
+    value: float = 0.0
+    
+class ActivityResponse(ActivityCreate):
+    id: int
+    timestamp: datetime
+    
+    class Config:
+        from_attributes = True
+        
+class CustomerCreate(BaseModel):
+    email: EmailStr
+    company_name: Optional[str] = None
+    tariff_plan: str = "free"
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
