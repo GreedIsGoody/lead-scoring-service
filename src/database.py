@@ -3,7 +3,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 
 #POSTGRES URL
-
+DATABASE_URL = 
 
 engine = create_async_engine(DATABASE_URL, echo=True)
 

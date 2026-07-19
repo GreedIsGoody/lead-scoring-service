@@ -31,3 +31,9 @@ class CustomerResponse(BaseModel):
     
     class Config:
         from_attributes = True
+        
+        
+class ScoringResponse(BaseModel):
+    customer_id: int
+    churn_probability: float
+    risk_level: str

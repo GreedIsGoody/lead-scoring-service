@@ -3,10 +3,13 @@ from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession 
 from sqlalchemy import select
 from typing import List
+import datetime
+
+from src.ml.model import predictor
 
 from src.database import get_db, engine, Base
 from src.models import Customer, CustomerActivityLog
-from src.schemas import CustomerCreate, CustomerResponse, ActivityCreate, ActivityResponse
+from src.schemas import CustomerCreate, CustomerResponse, ActivityCreate, ActivityResponse, ScoringResponse
 
 
 @asynccontextmanager
@@ -92,3 +95,60 @@ async def log_customer_activity(activity_data: ActivityCreate, db:AsyncSession =
     await db.commit()
     await db.refresh(new_log)
     return new_log
+
+
+@app.get("/api/v1/customers/{customer_id}/score", response_model=ScoringResponse, tags=["ML Analytics"])
+async def get_customer_churn_score(customer_id: int, db:AsyncSession = Depends(get_db)):
+    
+    #checking existing of client in base
+    customer_query = select(Customer).where(Customer.id == customer_id)
+    customer_res = await db.execute(customer_query)
+    customer = customer_res.scalar_one_or_none()
+    
+    if not customer:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Customer was not found"
+        )
+
+    # Greending features for model
+    is_premium = 1 if customer.tariff_plan in ["premium", "enterprise"] else 0
+    
+    
+    # Getting all logs activity from model
+    logs_query = select(CustomerActivityLog).where(CustomerActivityLog.customer_id == customer_id)
+    logs_res = await db.execute(logs_query)
+    logs = logs_res.scalars().all()
+    
+    #Counting attemps to communicate with support
+    support_tickets = sum(1 for log in logs if log.activity_type == "support_ticket")
+    
+    #Counting total amount successfull payments
+    total_payments = sum(log.value for log in logs if log.activity_type == "payment_success")
+    
+    #Counting how many days was last activity
+    if logs:
+        last_activity_time = max(log.timestamp for log in logs)
+        now = datetime.datetime.now(datetime.timezone.utc)
+        days_since_last_login = (now - last_activity_time).days
+        
+    else:
+        #if we hadn`t any activity, counting from register date
+        now = datetime.datetime.now(datetime.timezone.utc)
+        days_since_last_login = (now - customer.created_at).days
+        
+    #Forming a structure of feature, what a model is awaiting 
+    customer_features = {
+        "days_since_last_login": max(0, days_since_last_login),
+        "support_tickets_count": support_tickets,
+        "total_payments": float(total_payments),
+        "is_premium": is_premium
+    }
+    #handover a feature in ML-Model
+    ml_result = predictor.predict_churn(customer_features)
+    
+    return {
+        "customer_id": customer_id,
+        "churn_probability": ml_result["churn_probability"],
+        "risk_level" : ml_result["risk_level"]
+    }
