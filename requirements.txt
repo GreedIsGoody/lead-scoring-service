@@ -1,0 +1,16 @@
+# Web & API
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+
+# Database (Async)
+sqlalchemy[asyncio]
+asyncpg
+alembic
+
+# Data Science & ML
+pandas
+numpy
+scikit-learn
+joblib
