@@ -52,7 +52,7 @@ async def create_customer(customer_data: CustomerCreate, db: AsyncSession = Depe
     new_customer = Customer(
         email=customer_data.email,
         company_name=customer_data.company_name,
-        tariff_play=customer_data.tariff_plan
+        tariff_plan=customer_data.tariff_plan
     )
     
     db.add(new_customer)
@@ -63,8 +63,8 @@ async def create_customer(customer_data: CustomerCreate, db: AsyncSession = Depe
 @app.get("/api/v1/customers", response_model=List[CustomerResponse], tags=["Customers"])
 async def get_customers(db:AsyncSession = Depends(get_db)):
     query = select(Customer).order_by(Customer.id)
-    result = db.execute(query)
-    customers = result.scalars().all()
+    result = await db.execute(query)
+    customers =  result.scalars().all()
     
     return customers
 

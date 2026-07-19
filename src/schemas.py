@@ -20,7 +20,14 @@ class CustomerCreate(BaseModel):
     email: EmailStr
     company_name: Optional[str] = None
     tariff_plan: str = "free"
-    created_at: datetime
+    
+    
+class CustomerResponse(BaseModel):
+    id: int
+    email: EmailStr
+    company_name: Optional[str]
+    tariff_plan: str
+    created_at: datetime    
     
     class Config:
         from_attributes = True
