@@ -1,7 +1,7 @@
 # 🚀 Lead Scoring & Churn Prediction Microservice
 
 A production-ready asynchronous Python backend service built with **FastAPI**, **PostgreSQL**, **SQLAlchemy (AsyncIO)**, and **scikit-learn**. The service tracks customer behavior and activity logs in real-time to compute predictive churn risk scores using a Random Forest machine learning model.
-
+This my first project with ML Integration
 ---
 
 ## 🌟 Key Features
