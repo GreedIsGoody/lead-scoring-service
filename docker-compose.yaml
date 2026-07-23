@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:15-slim
+    image: postgres:15
     container_name: lead_scoring_db
     restart: always
     environment:
